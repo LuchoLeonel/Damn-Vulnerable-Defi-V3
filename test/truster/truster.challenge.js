@@ -35,13 +35,14 @@ describe('[Challenge] Truster', function () {
 
     after(async function () {
         /** SUCCESS CONDITIONS - NO NEED TO CHANGE ANYTHING HERE */
-        expect(
-            await token.balanceOf(pool.address)
-        ).to.equal(0);
+
         // Player has taken all tokens from the pool
         expect(
             await token.balanceOf(player.address)
         ).to.equal(TOKENS_IN_POOL);
+        expect(
+            await token.balanceOf(pool.address)
+        ).to.equal(0);
     });
 });
 
