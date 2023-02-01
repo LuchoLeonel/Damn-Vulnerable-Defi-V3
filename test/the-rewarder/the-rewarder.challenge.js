@@ -70,6 +70,11 @@ describe('[Challenge] The rewarder', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        hackContract = await (await ethers.getContractFactory('HackTheRewarder', deployer)).deploy(flashLoanPool.address, rewarderPool.address);
+        await expect(
+            hackContract.connect(player).hack(TOKENS_IN_LENDER_POOL)
+        ).not.to.be.reverted;
+        
     });
 
     after(async function () {
