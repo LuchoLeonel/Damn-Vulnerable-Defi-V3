@@ -83,9 +83,7 @@ describe('[Challenge] The rewarder', function () {
 
         // Call the function hack inside our smart contract
         // Pass the tokens in lender pool amount as argument
-        await expect(
-            hackContract.connect(player).hack(TOKENS_IN_LENDER_POOL)
-        ).not.to.be.reverted;
+        await hackContract.connect(player).hack(TOKENS_IN_LENDER_POOL)
     });
 
     after(async function () {

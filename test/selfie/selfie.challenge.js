@@ -45,15 +45,11 @@ describe('[Challenge] Selfie', function () {
             token.address
         );
         // We're going to call the hack function inside our smart contract HackSelfie
-        await expect(
-            hackSelfie.connect(player).hack(TOKENS_IN_POOL)
-        ).not.to.be.reverted;
+        await hackSelfie.connect(player).hack(TOKENS_IN_POOL)
         // Once we have all set up, we're going to wait 2 days
         await ethers.provider.send("evm_increaseTime", [2 * 24 * 60 * 60]); // 5 days
         // Finally, we're going to call the execute function inside our contract HackSelfie
-        await expect(
-            hackSelfie.connect(player).execute()
-        ).not.to.be.reverted;
+        await hackSelfie.connect(player).execute()
     });
 
     after(async function () {

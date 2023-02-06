@@ -27,9 +27,7 @@ describe('[Challenge] Side entrance', function () {
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
         hacker = await (await ethers.getContractFactory('HackSideEntrance', deployer)).deploy(pool.address, player.address);
-        await expect(
-            hacker.flashLoan(ETHER_IN_POOL)
-        ).not.to.be.reverted;
+        await hacker.flashLoan(ETHER_IN_POOL)
     });
 
     after(async function () {

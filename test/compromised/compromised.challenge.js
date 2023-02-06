@@ -53,6 +53,28 @@ describe('Compromised challenge', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        hacker = await (await ethers.getContractFactory('HackCompromised', deployer)).deploy(
+            exchange.address,
+            oracle.address,
+            nftToken.address
+        );
+/*
+        expect(
+            await oracle.getMedianPrice(nftToken.symbol())
+        ).to.be.eq(EXCHANGE_INITIAL_ETH_BALANCE);
+*/
+        await hacker.connect(player).hack()
+
+        await nftToken.connect(exchange).safeMint(exchange.address);
+        expect(
+            await nftToken.balanceOf(exchange.address)
+        ).to.be.eq(1);
+
+        /*
+        expect(
+            await ethers.provider.getBalance(player.address)
+        ).to.be.eq(PLAYER_INITIAL_ETH_BALANCE);
+        */
     });
 
     after(async function () {
