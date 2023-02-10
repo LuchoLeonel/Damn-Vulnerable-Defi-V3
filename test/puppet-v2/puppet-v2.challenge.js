@@ -106,7 +106,7 @@ describe('[Challenge] Puppet v2', function () {
             1,                                                          // amountOutMin
             [token.address, weth.address],                              // [From, To]
             player.address,                                             // to
-            (await ethers.provider.getBlock('latest')).timestamp * 2    // deadline                                 // arbitrary deadline
+            (await ethers.provider.getBlock('latest')).timestamp * 2    // deadline
         )
         // Print the current balance of player and uniswap
         await printBalances();

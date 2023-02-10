@@ -72,7 +72,7 @@ describe('[Challenge] The rewarder', function () {
         /** CODE YOUR SOLUTION HERE */
 
         // Deploy our smart contract
-        hackContract = await (await ethers.getContractFactory('HackTheRewarder', deployer)).deploy(
+        hackContract = await (await ethers.getContractFactory('HackTheRewarder', player)).deploy(
             flashLoanPool.address,
             rewarderPool.address,
             liquidityToken.address,

@@ -39,7 +39,7 @@ describe('[Challenge] Selfie', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        hackSelfie = await (await ethers.getContractFactory('HackSelfie', deployer)).deploy(
+        hackSelfie = await (await ethers.getContractFactory('HackSelfie', player)).deploy(
             pool.address,
             governance.address,
             token.address

