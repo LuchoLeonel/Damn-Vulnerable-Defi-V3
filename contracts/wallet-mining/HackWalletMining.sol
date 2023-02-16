@@ -57,7 +57,7 @@ contract HackWalletMining is UUPSUpgradeable, GnosisSafe {
                 );
                 // Create our 43th proxy
                 walletDeployer.drop(data);
-                // Also transfer all the token that the wallet Deployer has paid to us for creating proxies
+                // Also transfer all the token that the wallet Deployer had paid to us for creating proxies
                 this.transferTokens(_token, _player);
             }
         }
