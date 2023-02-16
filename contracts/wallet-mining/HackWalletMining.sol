@@ -2,12 +2,8 @@
 pragma solidity ^0.8.4;
 
 import { WalletDeployer } from "./WalletDeployer.sol";
-import "@gnosis.pm/safe-contracts/contracts/proxies/GnosisSafeProxyFactory.sol";
-import "@gnosis.pm/safe-contracts/contracts/proxies/GnosisSafeProxy.sol";
 import "@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
