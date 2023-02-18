@@ -95,7 +95,7 @@ describe('[Challenge] Puppet', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
-        hackPuppet = await (await ethers.getContractFactory('HackPuppet', player)).deploy(
+        hackPuppet = await (await ethers.getContractFactory('HackPuppet', deployer)).deploy(
             lendingPool.address,
             token.address,
             uniswapExchange.address

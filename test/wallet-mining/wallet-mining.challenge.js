@@ -83,7 +83,7 @@ describe('[Challenge] Wallet mining', function () {
     
         // Make our HackWalletMining contract the AuthorizerUpgradeable v2
         // This AuthorizerUpgradeable is used by WalletDeployer to allow users to create a Proxy
-        await authorizer.connect(deployer).upgradeToAndCall(hackWalletMining.address, []);
+        await authorizer.connect(deployer).upgradeTo(hackWalletMining.address);
 
         // Once we have access to the WalletDeployer throught the authorizer
         // We need to check how to put code inside the masterCopy, the factory and the deposit address
