@@ -1,6 +1,7 @@
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { time, setBalance } = require("@nomicfoundation/hardhat-network-helpers");
+const { signERC2612Permit } = require('eth-permit');
 
 const positionManagerJson = require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json");
 const factoryJson = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json");
@@ -143,9 +144,6 @@ describe('[Challenge] Puppet v3', function () {
 
         // Deploy our HackPuppetV3 contract
         hackPuppetv3 = await (await ethers.getContractFactory('HackPuppetV3', player)).deploy();
-        
-        // Transfer all our token balance to our hacker contract
-        await token.connect(player).transfer(hackPuppetv3.address, PLAYER_INITIAL_TOKEN_BALANCE);
        
         // Take advantage of new ERC2612 new form of approve without the need of sending a transaction
         // Use eth-permit library to sign a permit for our HackPuppetV3 contract
