@@ -155,11 +155,13 @@ describe('[Challenge] Puppet v3', function () {
             ethers.utils.parseUnits('110', 'ether')
         );
 
-        // Trigger the swap function of our hacker contract
-        // Pass the encodePriceSqrt with a of 1 to 1000000
-        // Sqrt is the max price difference we allow and
-        // That's the price difference we're going to generate making the swap
-        // And include the data needed to make a permit
+        /*
+            Trigger the swap function of our hacker contract
+            Pass the encodePriceSqrt with a of 1 to 1000000
+            Sqrt is the max price difference we allow and
+            That's the price difference we're going to generate making the swap
+            And include the data needed to make a permit
+        */
         await hackPuppetv3.connect(player).swap(
             uniswapPool.address,
             token.address,

