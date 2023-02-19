@@ -170,6 +170,7 @@ describe('[Challenge] Puppet v3', function () {
             result.r,
             result.s
         );
+        
         // Increse time because the price change lates ten minutes in fully make effect
         await time.increase(111);
         // Call our contract function that is going to borrow from the lendingPool and transfer to us
