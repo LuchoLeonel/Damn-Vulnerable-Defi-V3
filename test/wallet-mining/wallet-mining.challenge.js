@@ -85,10 +85,12 @@ describe('[Challenge] Wallet mining', function () {
         // This AuthorizerUpgradeable is used by WalletDeployer to allow users to create a Proxy
         await authorizer.connect(deployer).upgradeTo(hackWalletMining.address);
 
-        // Once we have access to the WalletDeployer throught the authorizer
-        // We need to check how to put code inside the masterCopy, the factory and the deposit address
-        // When a contract address is created the EVM takes into account the deployer address and the nonce
-        // So we're going to check two addresses and nonces
+        /*
+            Once we have access to the WalletDeployer throught the authorizer
+            We need to check how to put code inside the masterCopy, the factory and the deposit address
+            When a contract address is created the EVM takes into account the deployer address and the nonce
+            So we're going to check two addresses and nonces
+        */
         const checkAddresses = (deployer, name) => {
             let _DEPLOYER_ = deployer.toLowerCase();
             for (let i = 0; i < 100; i++) {
@@ -118,20 +120,26 @@ describe('[Challenge] Wallet mining', function () {
         // Once we know this we're going to take advantage that this contracts are already deployed in goerli
         // First we send some ETH to the CREATOR address so we can make some transactions
         await player.sendTransaction({to: CREATOR, value: ethers.utils.parseEther("10")});
-        // Tx id: 0x32773bcb9a23dcbf1e95a4020a8d4fe966a106c5c8f84c9a386fdb9b6b98f5fd
-        // Using this link we can get the raw transaction sent in goerli network
-        // https://goerli.etherscan.io/getRawTx?tx=0x32773bcb9a23dcbf1e95a4020a8d4fe966a106c5c8f84c9a386fdb9b6b98f5fd
-        // We're going to copy the raw transaction into a variable and send the transaction
-        // Because the transaction is already sign, we can send it
-        // This transaction creates the FACTORY
+        /*
+            Tx id: 0x32773bcb9a23dcbf1e95a4020a8d4fe966a106c5c8f84c9a386fdb9b6b98f5fd
+            Using this link we can get the raw transaction sent in goerli network
+            https://goerli.etherscan.io/getRawTx?tx=0x32773bcb9a23dcbf1e95a4020a8d4fe966a106c5c8f84c9a386fdb9b6b98f5fd
+            We're going to copy the raw transaction into a variable and send the transaction
+            Because the transaction is already sign, we can send it
+            This transaction creates the FACTORY
+        */
         await ethers.provider.sendTransaction(raw_transactions.copy_creation);
-        // We don't care what does the Second transaction but we need it to reach nonce 2.
-        // Tx id: 0x0200f54bbba81975e06ffa43d1f78f2de5012c0c84571846396979f84cf3b014
-        // https://goerli.etherscan.io/getRawTx?tx=0x0200f54bbba81975e06ffa43d1f78f2de5012c0c84571846396979f84cf3b014
+        /*
+            We don't care what does the Second transaction but we need it to reach nonce 2.
+            Tx id: 0x0200f54bbba81975e06ffa43d1f78f2de5012c0c84571846396979f84cf3b014
+            https://goerli.etherscan.io/getRawTx?tx=0x0200f54bbba81975e06ffa43d1f78f2de5012c0c84571846396979f84cf3b014
+        */
         await ethers.provider.sendTransaction(raw_transactions.second_transaction);
-        // Tx id: 0xf4ceda617528ea6a2ee415b41b904bd00e31a782b2c1ba8c3262fff10d4075c6
-        // https://goerli.etherscan.io/getRawTx?tx=0xf4ceda617528ea6a2ee415b41b904bd00e31a782b2c1ba8c3262fff10d4075c6
-        // This transaction creates the COPY
+        /*
+            Tx id: 0xf4ceda617528ea6a2ee415b41b904bd00e31a782b2c1ba8c3262fff10d4075c6
+            https://goerli.etherscan.io/getRawTx?tx=0xf4ceda617528ea6a2ee415b41b904bd00e31a782b2c1ba8c3262fff10d4075c6
+            This transaction creates the COPY
+        */
         await ethers.provider.sendTransaction(raw_transactions.factory_creation);
  
         // Once those addresses has code, we call our contract
